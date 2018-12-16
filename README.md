@@ -12,3 +12,10 @@ var confirmModal = new Modal({
 
 confirmModal.open();
 ```
+
+####Todos
+- Add Demo page
+- Add to npm
+
+####Docs
+https://amirkhiz.github.io/slide-to-confirm/
