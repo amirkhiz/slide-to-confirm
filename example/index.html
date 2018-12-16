@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>STCModal Example</title>
+
+    <link type="text/css" rel="stylesheet" href="../src/slide-to-confirm.min.css">
+</head>
+<body>
+
+<script src="../src/slide-to-confirm.min.js"></script>
+<script>
+    var stcModal = new STCModal({
+        content: '<h4>Do you want to confirm this transaction?</h4>',
+        confirmationMessage: 'Transaction successfully confirmed.',
+        confirmCallback: function (value, modal) {
+            alert('You confirmed the transaction!');
+        },
+    });
+
+    stcModal.open();
+</script>
+</body>
+</html>
