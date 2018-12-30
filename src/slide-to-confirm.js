@@ -1,6 +1,9 @@
 (function () {
 
-    // STCModal constructor
+    /**
+     * STCModal
+     * @constructor
+     */
     this.STCModal = function () {
         // Unique id for ever new created modal
         this.modalId = Date.now();
@@ -13,7 +16,7 @@
         this.confirmationMessageHolder = null;
 
         // Determine proper prefix
-        this.transitionEnd = transitionSelect();
+        this.transitionEnd = _transitionSelect();
 
         // Define option defaults
         var defaults = {
@@ -30,14 +33,15 @@
 
         // Create options by extending defaults with the passed in arguments
         if (arguments[0] && typeof arguments[0] === 'object') {
-            this.options = extendDefaults(defaults, arguments[0]);
+            this.options = _extendDefaults(defaults, arguments[0]);
         }
 
         if (this.options.autoOpen === true) this.open();
     };
 
-    // Public Methods
-
+    /**
+     * Close Modal
+     */
     STCModal.prototype.close = function () {
         var _ = this;
 
@@ -53,9 +57,12 @@
         });
     };
 
+    /**
+     * Open Modal
+     */
     STCModal.prototype.open = function () {
-        buildOut.call(this);
-        initializeEvents.call(this);
+        _buildOut.call(this);
+        _initializeEvents.call(this);
         window.getComputedStyle(this.modal).height;
         this.modal.className = this.modal.className +
             (this.modal.offsetHeight > window.innerHeight ?
@@ -63,6 +70,10 @@
         this.overlay.className = this.overlay.className + ' slide-confirm-open';
     };
 
+    /**
+     * Set the confirmed message
+     * @param {string} message
+     */
     STCModal.prototype.setConfirmationMessage = function (message) {
         this.options.confirmationMessage = message;
 
@@ -71,79 +82,42 @@
         }
     };
 
+    /**
+     * Will set the confirm callback
+     * @param {function} callback
+     */
     STCModal.prototype.setConfirmCallback = function (callback) {
         this.options.confirmCallback = callback;
     };
 
-    // Private Methods
+    /*
+     * Private Methods
+     */
 
-    function buildOut() {
-
-        var content, contentHolder, confirmSliderHolder, docFrag;
-
-        /*
-         * If content is an HTML string, append the HTML string.
-         * If content is a domNode, append its content.
-         */
-
-        if (typeof this.options.content === 'string') {
-            content = this.options.content;
-        } else {
-            content = this.options.content.innerHTML;
-        }
+    /**
+     * Build base elements
+     * @private
+     */
+    function _buildOut() {
+        var docFrag;
 
         // Create a DocumentFragment to build with
         docFrag = document.createDocumentFragment();
 
         // Create modal element
-        this.modal = document.createElement('div');
-        this.modal.className = 'slide-confirm-modal ' + this.options.className;
-        this.modal.id = 'slide-confirm-modal-' + this.modalId;
-        this.modal.style.minWidth = this.options.minWidth + 'px';
-        this.modal.style.maxWidth = this.options.maxWidth + 'px';
+        this.modal = _createModalElm(this.modalId, this.options);
 
-        // If closeButton option is true, add a close button
-        if (this.options.closeButton === true) {
-            this.closeButton = document.createElement('button');
-            this.closeButton.className = 'slide-confirm-close close-button';
-            this.closeButton.innerHTML = '&times;';
-            this.modal.appendChild(this.closeButton);
-        }
+        // Create a close button
+        this.modal.appendChild(this.closeButton = _createCloseButtonElm(this.options));
 
-        // If overlay is true, add one
-        if (this.options.overlay === true) {
-            this.overlay = document.createElement('div');
-            this.overlay.className = 'slide-confirm-overlay ' + this.options.className;
-            docFrag.appendChild(this.overlay);
-        }
+        // Create overlay and append it
+        docFrag.appendChild(this.overlay = _createOverlayElm(this.options));
 
         // Create content area and append to modal
-        contentHolder = document.createElement('div');
-        contentHolder.className = 'slide-confirm-content';
-        contentHolder.innerHTML = content;
-        this.modal.appendChild(contentHolder);
+        this.modal.appendChild(_createContentAreaElm(this.options.content));
 
-        // Create content area and append to modal
-        confirmSliderHolder = document.createElement('div');
-        confirmSliderHolder.className = 'slide-confirm-slider';
-
-        this.confirmRange = document.createElement('input');
-        this.confirmRange.className = 'confirm-range-input';
-        this.confirmRange.type = 'range';
-        this.confirmRange.value = '0';
-        this.confirmRange.min = '0';
-        this.confirmRange.max = '100';
-        confirmSliderHolder.appendChild(this.confirmRange);
-
-        // Create confirmation message
-        this.confirmationMessageHolder = document.createElement('p');
-        this.confirmationMessageHolder.className = 'confirmation-message-holder';
-        this.confirmationMessageHolder.innerHTML = this.options.confirmationMessage;
-        this.confirmationMessageHolder.style.display = 'none';
-        this.confirmationMessageHolder.style.opacity = '0';
-        confirmSliderHolder.appendChild(this.confirmationMessageHolder);
-
-        this.modal.appendChild(confirmSliderHolder);
+        // Create confirm slider and append to modal
+        this.modal.appendChild(_createConfirmSliderHolderElm(this));
 
         // Append modal to DocumentFragment
         docFrag.appendChild(this.modal);
@@ -152,7 +126,14 @@
         document.body.appendChild(docFrag);
     }
 
-    function extendDefaults(source, properties) {
+    /**
+     * Extend default options
+     * @param {object} source
+     * @param {object} properties
+     * @return {*}
+     * @private
+     */
+    function _extendDefaults(source, properties) {
         var property;
 
         for (property in properties) {
@@ -164,7 +145,11 @@
         return source;
     }
 
-    function initializeEvents() {
+    /**
+     * Initialize modal events
+     * @private
+     */
+    function _initializeEvents() {
 
         if (this.closeButton) {
             this.closeButton.addEventListener('click', this.close.bind(this));
@@ -175,11 +160,16 @@
         }
 
         if (this.confirmRange) {
-            this.confirmRange.addEventListener('change', confirmRangeChangeEvent.bind(this));
+            this.confirmRange.addEventListener('change', _confirmRangeChangeEvent.bind(this));
         }
     }
 
-    function confirmRangeChangeEvent(event) {
+    /**
+     * Confirm range change event callback
+     * @param {object} event
+     * @private
+     */
+    function _confirmRangeChangeEvent(event) {
         var slidePos = event.target.value;
 
         if (slidePos > 99) {
@@ -190,13 +180,18 @@
             (typeof this.options.confirmCallback === 'function') && this.options.confirmCallback(slidePos, this);
 
             // Show confirmation message
-            fadeInEffect(this.confirmationMessageHolder);
+            _fadeInEffect(this.confirmationMessageHolder);
         } else {
             event.target.value = 0;
         }
     }
 
-    function transitionSelect() {
+    /**
+     * Transition based on browser
+     * @return {string}
+     * @private
+     */
+    function _transitionSelect() {
         var el = document.createElement('div');
 
         if (el.style.WebkitTransition) return 'webkitTransitionEnd';
@@ -205,7 +200,12 @@
         return 'transitionend';
     }
 
-    function fadeOutEffect(element) {
+    /**
+     * Fade out effect on element that sent as parameter
+     * @param {HTMLElement} element
+     * @private
+     */
+    function _fadeOutEffect(element) {
         var fadeTarget = element;
 
         var fadeEffect = setInterval(function () {
@@ -222,7 +222,12 @@
         }, 30);
     }
 
-    function fadeInEffect(element) {
+    /**
+     * Fade in effect on element that sent as parameter
+     * @param {HTMLElement} element
+     * @private
+     */
+    function _fadeInEffect(element) {
         var fadeTarget = element;
         var opacity = 0.1;
 
@@ -240,5 +245,134 @@
                 clearInterval(fadeEffect);
             }
         }, 10);
+    }
+
+    /**
+     * Create modal element
+     * @param {string} modalId
+     * @param {object} options
+     * @return {HTMLDivElement}
+     * @private
+     */
+    function _createModalElm(modalId, options) {
+        var modal = document.createElement('div');
+
+        modal.className = 'slide-confirm-modal ' + options.className;
+        modal.id = 'slide-confirm-modal-' + modalId;
+        modal.style.minWidth = options.minWidth + 'px';
+        modal.style.maxWidth = options.maxWidth + 'px';
+
+        return modal;
+    }
+
+    /**
+     * Create modal close button element
+     * @param {object} options
+     * @return {?HTMLButtonElement}
+     * @private
+     */
+    function _createCloseButtonElm(options) {
+        if (options.closeButton === false) {
+            return null;
+        }
+
+        var closeButton = document.createElement('button');
+
+        closeButton.className = 'slide-confirm-close close-button';
+        closeButton.innerHTML = '&times;';
+
+        return closeButton;
+    }
+
+    /**
+     * Create Overlay element if requested in options
+     * @param options
+     * @return {?HTMLDivElement}
+     * @private
+     */
+    function _createOverlayElm(options) {
+        if (options.overlay === false) {
+            return false;
+        }
+
+        var overlay = document.createElement('div');
+
+        overlay.className = 'slide-confirm-overlay ' + options.className;
+
+        return overlay;
+    }
+
+    /**
+     * Create content area element based on sent content
+     * @param content
+     * @return {HTMLDivElement}
+     * @private
+     */
+    function _createContentAreaElm(content) {
+        var contentHolder = document.createElement('div');
+
+        // If content is an HTML string, append the HTML string.
+        // If content is a domNode, append its content.
+        if (typeof content !== 'string') {
+            content = content.innerHTML;
+        }
+
+        contentHolder.className = 'slide-confirm-content';
+        contentHolder.innerHTML = content;
+
+        return contentHolder;
+    }
+
+    /**
+     * Create confirm slider holder element with related elements inside
+     * @param {object} self
+     * @return {HTMLDivElement}
+     * @private
+     */
+    function _createConfirmSliderHolderElm(self) {
+        var confirmSliderHolder = document.createElement('div');
+        confirmSliderHolder.className = 'slide-confirm-slider';
+
+        // Create confirm range element and append it to confirm slider element
+        confirmSliderHolder.appendChild(self.confirmRange = _createConfirmRangeElm());
+
+        // Create confirmation message and append it to confirm slider element
+        confirmSliderHolder.appendChild(self.confirmationMessageHolder = _createConfirmMessageElm(self.options));
+
+        return confirmSliderHolder;
+    }
+
+    /**
+     * Create Input range element
+     * @return {HTMLInputElement}
+     * @private
+     */
+    function _createConfirmRangeElm() {
+        var confirmRange = document.createElement('input');
+
+        confirmRange.className = 'confirm-range-input';
+        confirmRange.type = 'range';
+        confirmRange.value = '0';
+        confirmRange.min = '0';
+        confirmRange.max = '100';
+
+        return confirmRange;
+    }
+
+    /**
+     * Create confirm message element
+     * @param options
+     * @return {HTMLParagraphElement}
+     * @private
+     */
+    function _createConfirmMessageElm(options) {
+        var confirmationMessageHolder = document.createElement('p');
+
+        confirmationMessageHolder.className = 'confirmation-message-holder';
+        confirmationMessageHolder.innerHTML = options.confirmationMessage;
+        confirmationMessageHolder.style.display = 'none';
+        confirmationMessageHolder.style.opacity = '0';
+
+        return confirmationMessageHolder;
     }
 }());
